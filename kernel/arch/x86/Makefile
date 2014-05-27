@@ -13,10 +13,14 @@ LO_OBJS=	arch.o		\
 			space.o		\
 			syscalls.o	\
 			interrupt.o	\
-			interrupt_prologue.o	\
 			pci.o		\
 			exceptions.o
 
+ifeq ($(BSP),x86-qemu-vmm)
+
+LO_OBJS+= interrupt_prologue.o
+
+endif
 LO_DEPS=	$(BSP)/$(BSP).lo
 
 all: $(LO_TARGET)
@@ -37,6 +41,7 @@ distclean: clean
 	$(MAKE) -C x86-qemu distclean
 	$(MAKE) -C x86-qemu-vmm distclean
 	$(RM) .depend.mk
+	$(RM) *.o
 ifdef BSP
 	$(CD) $(BSP) && $(MAKE) distclean
 endif
