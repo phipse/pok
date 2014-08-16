@@ -27,7 +27,7 @@ with POK;
 virtual processor partition
 properties
   POK::Scheduler => RR;
-  POK::Additional_Features => (x86_vmm, libc, libc_string, libc_stdio, libc_stdlib, console, pci, io);
+  POK::Additional_Features => (x86_vmm, libc_stdio, console);
 end partition;
 
 
@@ -58,13 +58,13 @@ process implementation myProcess.impl
 subcomponents
   thr1 : thread mythread.impl;
 properties
-  POK::Needed_Memory_Size => 8192Kbyte;
+  POK::Needed_Memory_Size => 120Kbyte;
 end myProcess.impl;
 
 
 thread mythread
 properties
-  Source_Stack_Size => 4096Kbyte;
+  Source_Stack_Size => 30Kbyte;
 end mythread;
 
 thread implementation mythread.impl
@@ -74,7 +74,7 @@ properties
   dispatch_protocol => periodic;
   period => 1000ms;
   deadline => 1000ms;
-  compute_execution_time => 50ms .. 100ms;
+  compute_execution_time => 1ms .. 2ms;
 end mythread.impl;
 
 
@@ -82,7 +82,7 @@ end mythread.impl;
 subprogram user_hello
 properties
   source_name => "user_hello";
-  source_language => (C);
+  source_language => C;
   POK::Source_Location => "../../../hello.o";
 end user_hello;
 
@@ -97,6 +97,4 @@ subcomponents
 properties
    Actual_Processor_Binding => (reference (cpu.part1)) applies to part1;
 end node.impl;
-
-
 end myHello;

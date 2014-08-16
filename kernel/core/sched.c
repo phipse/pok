@@ -33,6 +33,10 @@
 #include <core/partition.h>
 #endif
 
+#ifdef POK_NEEDS_X86_VMM
+#include <core/vcpu.h>
+#endif
+
 #ifdef POK_NEEDS_MIDDLEWARE
 #include <middleware/port.h>
 #endif
@@ -55,6 +59,11 @@ uint8_t                   pok_current_partition;
 
 void                      pok_sched_partition_switch();
 #endif
+
+#ifdef POK_NEEDS_X86_VMM
+
+uint8_t                   pok_current_vcpu;
+#endif 
 
 #if defined (POK_NEEDS_PORTS_SAMPLING) || defined (POK_NEEDS_PORTS_QUEUEING)
 void pok_port_flushall (void);
@@ -550,4 +559,45 @@ uint32_t pok_sched_get_current(uint32_t *thread_id)
 }
 #endif
 
+#ifdef POK_NEEDS_X86_VMM
+/*
+ * For now, as we do not need schedule of vcpu.
+ */
+#define switch_kerenl_stack(v) ((void)0)
+#define save_segments(p) ((void)0)
+#define load_segments(n) ((void)0)
+int sched_init_vcpu(vcpu_t *v)
+{
+  v->sched_info.start_time = POK_GETTICK();
+  return POK_ERRNO_OK;
+}
+
+void sched_ctxt_switch_from_vcpu(vcpu_t *v)
+{
+  // To avoid the compile error, add this statement.
+  save_segments(v);
+  vcpu_t *vcpu;
+  vcpu = v;
+  v = vcpu;
+  return;
+}
+void sched_ctxt_switch_to_vcpu(vcpu_t *v)
+{
+  // To avoid the compile error, add this statement.
+  load_segments(v);
+  vcpu_t *vcpu;
+  vcpu = v;
+  v = vcpu;
+  return;
+}
+
+void sched_tail_vcpu(vcpu_t *v)
+{
+  // To avoid the compile error, add this statement.
+  vcpu_t *vcpu;
+  vcpu = v;
+  v = vcpu;
+  return; 
+}
+#endif /* POK_NEEDS_X86_VMM */
 #endif /* __POK_NEEDS_SCHED */

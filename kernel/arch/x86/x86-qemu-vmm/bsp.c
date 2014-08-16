@@ -17,8 +17,10 @@
 
 #include <errno.h>
 #include <arch.h>
+#include <libc.h>
 #include <arch/x86/interrupt.h> /* meta handler */
 #include <core/partition.h>	/* POK_SCHED_CURRENT_PARTITION */
+#include <core/vcpu.h>
 
 #include "cons.h"
 #include "pm.h"
@@ -238,11 +240,61 @@ pok_ret_t pok_bsp_irq_unregister_hw (uint8_t  irq)
   return (POK_ERRNO_OK);
 }
 
+/*
+ * Register irq in vCPU.
+ * This irq must register in POK kernel first.
+ * The parameter vector is the irq number.
+ * The handle_irq is a common Entry from Guest OS.
+ */
+pok_ret_t pok_bsp_irq_register_vcpu(uint8_t vector,void (*handle_irq)(uint8_t))
+{
+  uint8_t i;
+  struct vcpu *v;
+  
+  vector += 32; 	//adjust the vector number.
+  if(vector < 32)
+    return POK_ERRNO_EINVAL; 
+  v = pok_partitions[POK_SCHED_CURRENT_PARTITION].vcpu;
+  for (i=0; i<16; i++)
+  {
+    if(v->arch.irqdesc[i].vector == 0)
+    {
+      v->arch.irqdesc[i].vector=vector;
+      v->arch.handler=(uint32_t) handle_irq;
+      return POK_ERRNO_OK;
+    }
+    else if(v->arch.irqdesc[i].vector == vector)
+    {
+      return POK_ERRNO_OK;
+    }
+  }
+  return POK_ERRNO_UNAVAILABLE;
+}	
+
+pok_ret_t pok_bsp_irq_unregister_vcpu(uint8_t vector)
+{
+  int i;
+  struct vcpu *v;
+  if(vector < 32)
+    return POK_ERRNO_EINVAL; 
+  v = pok_partitions[POK_SCHED_CURRENT_PARTITION].vcpu;
+  for (i=0;i<16;i++)
+  {
+    if(v->arch.irqdesc[i].vector == vector)
+    {
+      memset(v->arch.irqdesc+i, 0, sizeof(struct irq_desc));
+      return POK_ERRNO_OK;
+    }
+  }
+  return POK_ERRNO_EINVAL;
+}
+
+
 pok_ret_t pok_bsp_irq_register (uint8_t   irq,
                                 void      (*handler)(void))
 {
-  if( irq < 16 )
-    return (POK_ERRNO_EINVAL);
+//  if( irq < 16 )
+//    return (POK_ERRNO_EINVAL);
 
    pok_pic_unmask (irq);
 

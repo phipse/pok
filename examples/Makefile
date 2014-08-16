@@ -33,6 +33,8 @@ SUBDIRS= \
 	partitions-threads			\
 	rtems-guest				\
 	myHelloWorld				\
+	testHypercall				\
+	partitions-virtual-interrupt            \
 
 #	mutexes				\ ### deprecated Makefile
 #	mutexes-timed			\ ### deprecated Makefile
